@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://github.com/Yandex-Practicum/go-autotests/releases
+HostUrl=https://objects.githubusercontent.com/github-production-release-asset-2e65be/386608603/4b311c9e-f826-4e0f-a579-1db43f97f93c?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=releaseassetproduction%2F20250706%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250706T095429Z&X-Amz-Expires=1800&X-Amz-Signature=015ba1f30fb4d5d675784f1ff84444dec0c0c63c6368e6b9c3666c66a798c40d&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3Dgophermarttest&response-content-type=application%2Foctet-stream
