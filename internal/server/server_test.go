@@ -61,6 +61,8 @@ func TestRegisterHandler(t *testing.T) {
 	srv.RegisterHandler(w, req)
 
 	resp := w.Result()
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected 200, got %d", resp.StatusCode)
 	}
@@ -84,7 +86,10 @@ func TestLoginHandler(t *testing.T) {
 
 	srv.LoginHandler(w, req)
 
-	if w.Result().StatusCode != http.StatusOK {
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected 200")
 	}
 }
@@ -105,7 +110,10 @@ func TestUploadOrderHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.UploadOrderHandler(w, req)
 
-	if w.Result().StatusCode != http.StatusAccepted {
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusAccepted {
 		t.Errorf("expected 202")
 	}
 }
@@ -127,7 +135,10 @@ func TestGetOrdersHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.GetOrdersHandler(w, req)
 
-	if w.Result().StatusCode != http.StatusOK {
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected 200")
 	}
 }
@@ -147,7 +158,10 @@ func TestGetBalanceHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.GetBalanceHandler(w, req)
 
-	if w.Result().StatusCode != http.StatusOK {
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected 200")
 	}
 }
@@ -168,7 +182,10 @@ func TestWithdrawHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.WithdrawHandler(w, req)
 
-	if w.Result().StatusCode != http.StatusOK {
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected 200")
 	}
 }
@@ -190,7 +207,10 @@ func TestGetWithdrawalsHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.GetWithdrawalsHandler(w, req)
 
-	if w.Result().StatusCode != http.StatusOK {
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected 200")
 	}
 }

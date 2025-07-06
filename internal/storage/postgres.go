@@ -16,7 +16,7 @@ type PostgresStorage struct {
 	db *pgxpool.Pool
 }
 
-func (store *PostgresStorage) initSchema(ctx context.Context) error {
+func (s *PostgresStorage) initSchema(ctx context.Context) error {
 	const initSchemaQuery = `
 	CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
@@ -39,7 +39,7 @@ func (store *PostgresStorage) initSchema(ctx context.Context) error {
 		processed_at TIMESTAMP DEFAULT NOW()
 	);`
 
-	_, err := store.db.Exec(ctx, initSchemaQuery)
+	_, err := s.db.Exec(ctx, initSchemaQuery)
 	return err
 }
 
@@ -62,14 +62,14 @@ func NewPostgreStorage(ctx context.Context, DatabaseURI string) (*PostgresStorag
 	return storage, nil
 }
 
-func (store *PostgresStorage) Ping(ctx context.Context) error {
-	return store.db.Ping(ctx)
+func (s *PostgresStorage) Ping(ctx context.Context) error {
+	return s.db.Ping(ctx)
 }
 
-func (store *PostgresStorage) CreateUser(ctx context.Context, login string, passwordHash string) error {
+func (s *PostgresStorage) CreateUser(ctx context.Context, login string, passwordHash string) error {
 	const insertUserQuery = `INSERT INTO users (login, password_hash) VALUES ($1, $2)`
 
-	_, err := store.db.Exec(ctx, insertUserQuery, login, passwordHash)
+	_, err := s.db.Exec(ctx, insertUserQuery, login, passwordHash)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
 			// 23505 — уникальное ограничение нарушено
@@ -98,7 +98,7 @@ func (s *PostgresStorage) GetUserByLogin(ctx context.Context, login string) (mod
 	return user, hash, nil
 }
 
-func (s *PostgresStorage) GetUserById(ctx context.Context, id int) (model.User, error) {
+func (s *PostgresStorage) GetUserByID(ctx context.Context, id int) (model.User, error) {
 	const query = `SELECT id, login FROM users WHERE id = $1`
 
 	var user model.User

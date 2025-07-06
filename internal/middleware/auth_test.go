@@ -16,7 +16,7 @@ type mockStorage struct {
 	GetUserFunc func(ctx context.Context, id int) (model.User, error)
 }
 
-func (m *mockStorage) GetUserById(ctx context.Context, id int) (model.User, error) {
+func (m *mockStorage) GetUserByID(ctx context.Context, id int) (model.User, error) {
 	return m.GetUserFunc(ctx, id)
 }
 

@@ -23,7 +23,7 @@ import (
 type Storage interface {
 	CreateUser(ctx context.Context, login, passwordHash string) error
 	GetUserByLogin(ctx context.Context, login string) (model.User, string, error)
-	GetUserById(ctx context.Context, id int) (model.User, error)
+	GetUserByID(ctx context.Context, id int) (model.User, error)
 
 	AddOrder(ctx context.Context, user model.User, order model.Order) (int, error)
 	GetUserOrders(ctx context.Context, user model.User) ([]model.Order, error)
@@ -48,45 +48,45 @@ func NewServer(storage Storage, config *config.Config) *Server {
 	}
 }
 
-func (srv *Server) buildRouter() http.Handler {
+func (s *Server) buildRouter() http.Handler {
 	router := chi.NewRouter()
 	router.Use(chiMiddleware.StripSlashes)
-	router.Use(middleware.LogMiddleware(srv.config.Logger))
+	router.Use(middleware.LogMiddleware(s.config.Logger))
 	router.Use(middleware.DecompressMiddleware)
 	router.Use(middleware.CompressMiddleware)
 
-	router.Post("/api/user/register", srv.RegisterHandler)
-	router.Post("/api/user/login", srv.LoginHandler)
+	router.Post("/api/user/register", s.RegisterHandler)
+	router.Post("/api/user/login", s.LoginHandler)
 
 	// авторизованные ручки
 	router.Group(func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware(srv.storage))
+		r.Use(middleware.AuthMiddleware(s.storage))
 
-		r.Post("/api/user/orders", srv.UploadOrderHandler)
-		r.Get("/api/user/orders", srv.GetOrdersHandler)
-		r.Get("/api/user/balance", srv.GetBalanceHandler)
-		r.Post("/api/user/balance/withdraw", srv.WithdrawHandler)
-		r.Get("/api/user/withdrawals", srv.GetWithdrawalsHandler)
+		r.Post("/api/user/orders", s.UploadOrderHandler)
+		r.Get("/api/user/orders", s.GetOrdersHandler)
+		r.Get("/api/user/balance", s.GetBalanceHandler)
+		r.Post("/api/user/balance/withdraw", s.WithdrawHandler)
+		r.Get("/api/user/withdrawals", s.GetWithdrawalsHandler)
 	})
 
 	return router
 }
 
-func (srv *Server) Run(ctx context.Context) error {
-	router := srv.buildRouter()
+func (s *Server) Run(ctx context.Context) error {
+	router := s.buildRouter()
 
 	server := &http.Server{
-		Addr:    srv.config.RunAddress,
+		Addr:    s.config.RunAddress,
 		Handler: router,
 	}
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			srv.config.Logger.Fatalf("server error: %v", err)
+			s.config.Logger.Fatalf("server error: %v", err)
 		}
 	}()
 
-	go srv.OrdersStatusControl(ctx)
+	go s.OrdersStatusControl(ctx)
 
 	<-ctx.Done()
 

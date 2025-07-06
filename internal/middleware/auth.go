@@ -11,7 +11,7 @@ import (
 )
 
 type Storage interface {
-	GetUserById(ctx context.Context, id int) (model.User, error)
+	GetUserByID(ctx context.Context, id int) (model.User, error)
 }
 
 type contextKey string
@@ -34,7 +34,7 @@ func AuthMiddleware(store Storage) func(http.Handler) http.Handler {
 				return
 			}
 
-			user, err := store.GetUserById(r.Context(), userID)
+			user, err := store.GetUserByID(r.Context(), userID)
 			if err != nil {
 				if err == errs.ErrUserNotFound {
 					http.Error(w, "unauthorized", http.StatusUnauthorized)

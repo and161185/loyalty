@@ -95,18 +95,18 @@ func (mr *MockStorageMockRecorder) GetUserBalance(ctx, user interface{}) *gomock
 }
 
 // GetUserById mocks base method.
-func (m *MockStorage) GetUserById(ctx context.Context, id int) (model.User, error) {
+func (m *MockStorage) GetUserByID(ctx context.Context, id int) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserById", ctx, id)
+	ret := m.ctrl.Call(m, "GetUserByID", ctx, id)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserById indicates an expected call of GetUserById.
-func (mr *MockStorageMockRecorder) GetUserById(ctx, id interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) GetUserByID(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockStorage)(nil).GetUserById), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockStorage)(nil).GetUserByID), ctx, id)
 }
 
 // GetUserByLogin mocks base method.
