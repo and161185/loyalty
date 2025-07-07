@@ -28,9 +28,9 @@ func (s *Server) ProcessOrders(ctx context.Context, ch chan model.Order) {
 		case <-ctx.Done():
 			return
 		default:
-			orders, err := s.storage.GetUnprocessedOrders(ctx)
+			orders, err := s.orderStorage.GetUnprocessedOrders(ctx)
 			if err != nil {
-				s.config.Logger.Errorf("process orders: %v", err)
+				s.deps.Logger.Errorf("process orders: %v", err)
 				time.Sleep(1 * time.Second)
 				continue
 			}
@@ -42,7 +42,7 @@ func (s *Server) ProcessOrders(ctx context.Context, ch chan model.Order) {
 				default:
 					skipped++
 					if skipped%10 == 0 {
-						s.config.Logger.Warnf("channel full, skipped %d orders", skipped)
+						s.deps.Logger.Warnf("channel full, skipped %d orders", skipped)
 					}
 				}
 			}
@@ -59,15 +59,15 @@ func (s *Server) UpdateOrder(ctx context.Context, ch chan model.Order) {
 		case order := <-ch:
 			newStatusOrder, err := s.getStatus(ctx, order)
 			if err != nil {
-				s.config.Logger.Errorf("get order status: %v", err)
+				s.deps.Logger.Errorf("get order status: %v", err)
 				continue
 			}
 			if newStatusOrder.Status == order.Status {
 				continue
 			}
-			err = s.storage.UpdateOrder(ctx, newStatusOrder)
+			err = s.orderStorage.UpdateOrder(ctx, newStatusOrder)
 			if err != nil {
-				s.config.Logger.Errorf("update order: %v", err)
+				s.deps.Logger.Errorf("update order: %v", err)
 			}
 		}
 
@@ -75,7 +75,7 @@ func (s *Server) UpdateOrder(ctx context.Context, ch chan model.Order) {
 }
 
 func (s *Server) getStatus(ctx context.Context, order model.Order) (model.Order, error) {
-	url := fmt.Sprintf("%s/api/orders/%s", s.config.AccuralSystemAddress, order.Number)
+	url := fmt.Sprintf("%s/api/orders/%s", s.config.AccrualSystemAddress, order.Number)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

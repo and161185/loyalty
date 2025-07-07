@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"bytes"
 	"compress/gzip"
-	"io"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
 )
 
 func DecompressMiddleware(next http.Handler) http.Handler {
@@ -15,38 +15,36 @@ func DecompressMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		bodyBytes, err := io.ReadAll(r.Body)
+		gr, err := gzip.NewReader(r.Body)
 		if err != nil {
-			http.Error(w, "bad body", http.StatusBadRequest)
-			return
-		}
-
-		gr, err := gzip.NewReader(bytes.NewReader(bodyBytes))
-		if err != nil {
-			r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
-			next.ServeHTTP(w, r)
+			http.Error(w, "failed to decompress", http.StatusBadRequest)
 			return
 		}
 		defer gr.Close()
 
 		r.Body = gr
-
 		next.ServeHTTP(w, r)
 	})
 }
 
-func CompressMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-			next.ServeHTTP(w, r)
-			return
-		}
+func CompressMiddleware(logger *zap.SugaredLogger) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+				next.ServeHTTP(w, r)
+				return
+			}
 
-		grw := &gzipResponseWriter{ResponseWriter: w}
-		defer grw.Close()
+			grw := newGzipResponseWriter(w)
+			defer func() {
+				if err := grw.Close(); err != nil {
+					logger.Errorf("failed to close gzip writer: %v", err)
+				}
+			}()
 
-		next.ServeHTTP(grw, r)
-	})
+			next.ServeHTTP(grw, r)
+		})
+	}
 }
 
 type gzipResponseWriter struct {
@@ -54,18 +52,23 @@ type gzipResponseWriter struct {
 	writer *gzip.Writer
 }
 
-func (w *gzipResponseWriter) Write(b []byte) (int, error) {
-	if w.writer == nil {
-		w.Header().Set("Content-Encoding", "gzip")
-		gz := gzip.NewWriter(w.ResponseWriter)
-		w.writer = gz
+func newGzipResponseWriter(w http.ResponseWriter) *gzipResponseWriter {
+	w.Header().Set("Content-Encoding", "gzip")
+	return &gzipResponseWriter{
+		ResponseWriter: w,
+		writer:         gzip.NewWriter(w),
 	}
+}
 
+func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 	return w.writer.Write(b)
 }
 
 func (w *gzipResponseWriter) Close() error {
 	if w.writer != nil {
+		if err := w.writer.Flush(); err != nil {
+			return err
+		}
 		return w.writer.Close()
 	}
 	return nil

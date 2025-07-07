@@ -7,16 +7,15 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var (
+type TokenManager struct {
 	secretKey []byte
-)
-
-// Установи ключ при старте приложения
-func SetSecret(key string) {
-	secretKey = []byte(key)
 }
 
-func GenerateToken(userID int) (string, error) {
+func NewTokenManager(secretKey string) *TokenManager {
+	return &TokenManager{[]byte(secretKey)}
+}
+
+func (tm *TokenManager) GenerateToken(userID int) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"exp":     time.Now().Add(24 * time.Hour).Unix(), // токен на сутки
@@ -24,15 +23,15 @@ func GenerateToken(userID int) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(secretKey)
+	return token.SignedString(tm.secretKey)
 }
 
-func ParseToken(tokenStr string) (int, error) {
+func (tm *TokenManager) ParseToken(tokenStr string) (int, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		if t.Method != jwt.SigningMethodHS256 {
 			return nil, errs.ErrInvalidToken
 		}
-		return secretKey, nil
+		return tm.secretKey, nil
 	})
 
 	if err != nil || !token.Valid {

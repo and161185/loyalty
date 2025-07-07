@@ -24,7 +24,7 @@ func TestGetStatus_OK(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	cfg := &config.Config{AccuralSystemAddress: ts.URL}
+	cfg := &config.Config{AccrualSystemAddress: ts.URL}
 	srv := &Server{config: cfg}
 	order := model.Order{Number: "1234567890"}
 
@@ -49,7 +49,7 @@ func TestGetStatus_TooManyRequests(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	cfg := &config.Config{AccuralSystemAddress: ts.URL}
+	cfg := &config.Config{AccrualSystemAddress: ts.URL}
 	srv := &Server{config: cfg}
 	order := model.Order{Number: "1234567890"}
 
@@ -72,7 +72,7 @@ func TestGetStatus_NoContent(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	cfg := &config.Config{AccuralSystemAddress: ts.URL}
+	cfg := &config.Config{AccrualSystemAddress: ts.URL}
 	srv := &Server{config: cfg}
 	order := model.Order{Number: "1234567890"}
 

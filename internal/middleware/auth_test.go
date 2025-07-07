@@ -21,8 +21,9 @@ func (m *mockStorage) GetUserByID(ctx context.Context, id int) (model.User, erro
 }
 
 func TestAuthMiddleware(t *testing.T) {
-	auth.SetSecret("test-secret")
-	validToken, _ := auth.GenerateToken(1)
+	tm := auth.NewTokenManager("test-secret")
+
+	validToken, _ := tm.GenerateToken(1)
 
 	tests := []struct {
 		name           string
@@ -82,7 +83,7 @@ func TestAuthMiddleware(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			mw := AuthMiddleware(tt.storage)
+			mw := AuthMiddleware(tt.storage, tm)
 			handler := mw(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			}))

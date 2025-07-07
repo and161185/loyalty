@@ -18,7 +18,7 @@ type contextKey string
 
 const UserContextKey contextKey = "user"
 
-func AuthMiddleware(store Storage) func(http.Handler) http.Handler {
+func AuthMiddleware(store Storage, tm *auth.TokenManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -28,7 +28,7 @@ func AuthMiddleware(store Storage) func(http.Handler) http.Handler {
 			}
 
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-			userID, err := auth.ParseToken(tokenStr)
+			userID, err := tm.ParseToken(tokenStr)
 			if err != nil {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return

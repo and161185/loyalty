@@ -3,30 +3,23 @@ package config
 import (
 	"flag"
 	"os"
-
-	"go.uber.org/zap"
 )
 
 type Config struct {
 	RunAddress           string
 	DatabaseURI          string
-	AccuralSystemAddress string
-	Logger               *zap.SugaredLogger
+	AccrualSystemAddress string
+	Key                  string
 }
 
 func NewConfig() *Config {
-	logCfg := zap.NewProductionConfig()
-	logCfg.OutputPaths = []string{"stdout", "server.log"}
-
-	logger := zap.Must(logCfg.Build())
 
 	cfg := &Config{}
 	flag.StringVar(&cfg.RunAddress, "a", "localhost:8080", "HTTP server address")
 	flag.StringVar(&cfg.DatabaseURI, "d", "", "DB connection string")
-	flag.StringVar(&cfg.AccuralSystemAddress, "r", "", "Accural system address")
+	flag.StringVar(&cfg.AccrualSystemAddress, "r", "", "Accural system address")
+	flag.StringVar(&cfg.Key, "k", "default-insecure-key", "Key")
 	flag.Parse()
-
-	cfg.Logger = logger.Sugar()
 
 	ReadServerEnvironment(cfg)
 
@@ -42,7 +35,11 @@ func ReadServerEnvironment(cfg *Config) {
 		cfg.DatabaseURI = databaseURI
 	}
 
-	if accuralSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); accuralSystemAddress != "" {
-		cfg.AccuralSystemAddress = accuralSystemAddress
+	if accrualSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); accrualSystemAddress != "" {
+		cfg.AccrualSystemAddress = accrualSystemAddress
+	}
+
+	if key := os.Getenv("LOYALTY_KEY"); key != "" {
+		cfg.Key = key
 	}
 }

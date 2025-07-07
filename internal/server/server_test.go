@@ -10,6 +10,7 @@ import (
 
 	"github.com/and161185/loyalty/internal/auth"
 	"github.com/and161185/loyalty/internal/config"
+	"github.com/and161185/loyalty/internal/deps"
 	"github.com/and161185/loyalty/internal/middleware"
 	"github.com/and161185/loyalty/internal/mocks"
 	"github.com/and161185/loyalty/internal/model"
@@ -25,13 +26,13 @@ func setup(t *testing.T) (*Server, *mocks.MockStorage) {
 	mockStorage := mocks.NewMockStorage(ctrl)
 
 	logger := zaptest.NewLogger(t)
-	cfg := &config.Config{
-		Logger: logger.Sugar(),
+	cfg := &config.Config{}
+	deps := &deps.Deps{
+		TokenManager: auth.NewTokenManager("testsecret"),
+		Logger:       logger.Sugar(),
 	}
 
-	auth.SetSecret("testsecret")
-
-	srv := NewServer(mockStorage, cfg)
+	srv := NewServer(mockStorage, mockStorage, mockStorage, cfg, deps)
 
 	return srv, mockStorage
 }
@@ -102,7 +103,7 @@ func TestUploadOrderHandler(t *testing.T) {
 		AddOrder(gomock.Any(), gomock.Any(), model.Order{Number: order}).
 		Return(http.StatusAccepted, nil)
 
-	token, _ := auth.GenerateToken(1)
+	token, _ := srv.deps.TokenManager.GenerateToken(1)
 	req := newAuthenticatedRequest("POST", "/api/user/orders", token, order)
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, model.User{ID: 1})
 	req = req.WithContext(ctx)
@@ -127,7 +128,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			{Number: "1", Status: "PROCESSED", UploadedAt: time.Now()},
 		}, nil)
 
-	token, _ := auth.GenerateToken(1)
+	token, _ := srv.deps.TokenManager.GenerateToken(1)
 	req := newAuthenticatedRequest("GET", "/api/user/orders", token, "")
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, model.User{ID: 1})
 	req = req.WithContext(ctx)
@@ -150,7 +151,7 @@ func TestGetBalanceHandler(t *testing.T) {
 		GetUserBalance(gomock.Any(), model.User{ID: 1}).
 		Return(model.Balance{Current: 100.0, Withdrawn: 50.0}, nil)
 
-	token, _ := auth.GenerateToken(1)
+	token, _ := srv.deps.TokenManager.GenerateToken(1)
 	req := newAuthenticatedRequest("GET", "/api/user/balance", token, "")
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, model.User{ID: 1})
 	req = req.WithContext(ctx)
@@ -174,7 +175,7 @@ func TestWithdrawHandler(t *testing.T) {
 		Return(nil)
 
 	reqBody := `{"order":"12345678903","sum":50}`
-	token, _ := auth.GenerateToken(1)
+	token, _ := srv.deps.TokenManager.GenerateToken(1)
 	req := newAuthenticatedRequest("POST", "/api/user/balance/withdraw", token, reqBody)
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, model.User{ID: 1})
 	req = req.WithContext(ctx)
@@ -199,7 +200,7 @@ func TestGetWithdrawalsHandler(t *testing.T) {
 			{Order: "123", Sum: 10.5, ProcessedAt: time.Now()},
 		}, nil)
 
-	token, _ := auth.GenerateToken(1)
+	token, _ := srv.deps.TokenManager.GenerateToken(1)
 	req := newAuthenticatedRequest("GET", "/api/user/withdrawals", token, "")
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, model.User{ID: 1})
 	req = req.WithContext(ctx)

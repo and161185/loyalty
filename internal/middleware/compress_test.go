@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func TestDecompressMiddleware(t *testing.T) {
@@ -44,7 +46,7 @@ func TestCompressMiddleware(t *testing.T) {
 	req.Header.Set("Accept-Encoding", "gzip")
 	rr := httptest.NewRecorder()
 
-	handler := CompressMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := CompressMiddleware(zap.NewNop().Sugar())(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("compressed response"))
 	}))
 

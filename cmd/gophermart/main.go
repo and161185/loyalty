@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/and161185/loyalty/internal/config"
+	"github.com/and161185/loyalty/internal/deps"
 	"github.com/and161185/loyalty/internal/server"
 	"github.com/and161185/loyalty/internal/storage"
 )
@@ -16,13 +17,15 @@ func main() {
 	defer stop()
 
 	config := config.NewConfig()
+	deps := deps.NewDependencies(config.Key)
+
 	storage, err := storage.NewPostgreStorage(ctx, config.DatabaseURI)
 	if err != nil {
-		config.Logger.Fatal(err)
+		deps.Logger.Fatal(err)
 	}
 
-	srv := server.NewServer(storage, config)
+	srv := server.NewServer(storage, storage, storage, config, deps)
 	if err := srv.Run(ctx); err != nil {
-		config.Logger.Fatal(err)
+		deps.Logger.Fatal(err)
 	}
 }
